@@ -11,8 +11,8 @@ export class AnalyticsService {
 
   constructor(private http: HttpClient) {}
 
-  canTeach(klasse: string, raumName: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/kannUnterrichten/${klasse}/${raumName}`);
+  canTeach(klasse: string, raumName: string): Observable<string> {
+    return this.http.get(`${this.apiUrl}/kannUnterrichten/${klasse}/${raumName}`, { responseType: 'text' });
   }
 
   getAverageAge(): Observable<number> {

@@ -115,7 +115,6 @@ export class StudentsComponent implements OnInit {
       this.isLoading = true;
       this.successMessage = '';
       this.errorMessage = '';
-
       this.studentService.addStudent(this.studentForm.value).subscribe({
         next: () => {
           this.successMessage = 'Student added successfully!';

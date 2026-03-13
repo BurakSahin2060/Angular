@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ChangeDetectorRef } from '@angular/core';
 import { AnalyticsService } from '../../services/analytics.service';
 
 @Component({
@@ -24,14 +25,13 @@ import { AnalyticsService } from '../../services/analytics.service';
               <label class="block text-sm font-medium text-gray-700">Raum Name</label>
               <input type="text" formControlName="raumName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
             </div>
-            <button type="submit" [disabled]="teachForm.invalid || isChecking" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50">
-              {{ isChecking ? 'Checking...' : 'Check' }}
+            <button type="submit" [disabled]="teachForm.invalid || loadingCheck" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50">
+              {{ loadingCheck ? 'Checking...' : 'Check' }}
             </button>
           </form>
-          <div *ngIf="canTeach !== null" class="mt-4">
-            <span [class]="canTeach ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 py-1 rounded-full text-sm font-medium">
-              {{ canTeach ? 'Can Teach' : 'Cannot Teach' }}
-            </span>
+          <div *ngIf="loadingCheck" class="text-blue-500 font-semibold mt-4">Checking...</div>
+          <div *ngIf="canTeachResult" class="mt-4 p-4 rounded-xl shadow-md bg-green-100 text-green-800 font-bold">
+            {{ canTeachResult }}
           </div>
         </div>
 
@@ -67,19 +67,20 @@ import { AnalyticsService } from '../../services/analytics.service';
   `,
   styles: []
 })
-export class AnalyticsComponent {
+export class AnalyticsComponent implements OnInit {
   teachForm: FormGroup;
   femaleForm: FormGroup;
-  canTeach: boolean | null = null;
+  canTeachResult: string | null = null;
   averageAge: number | null = null;
   femalePercentage: number | null = null;
-  isChecking = false;
+  loadingCheck = false;
   isLoadingAge = false;
   isLoadingFemale = false;
 
   constructor(
     private fb: FormBuilder,
-    private analyticsService: AnalyticsService
+    private analyticsService: AnalyticsService,
+    private cdr: ChangeDetectorRef
   ) {
     this.teachForm = this.fb.group({
       klasse: ['', Validators.required],
@@ -91,49 +92,74 @@ export class AnalyticsComponent {
     });
   }
 
+  ngOnInit() {
+    this.resetAnalyticsState();
+  }
+
+  resetAnalyticsState() {
+    this.canTeachResult = null;
+    this.averageAge = null;
+    this.femalePercentage = null;
+    this.loadingCheck = false;
+    this.isLoadingAge = false;
+    this.isLoadingFemale = false;
+  }
+
   checkCanTeach() {
     if (this.teachForm.valid) {
-      this.isChecking = true;
+      this.loadingCheck = true;
+      this.canTeachResult = null;
       const { klasse, raumName } = this.teachForm.value;
       this.analyticsService.canTeach(klasse, raumName).subscribe({
-        next: (result) => {
-          this.canTeach = result;
-          this.isChecking = false;
+        next: (response) => {
+          this.canTeachResult = response;
+          this.loadingCheck = false;
+          this.cdr.detectChanges();
         },
         error: (error) => {
-          console.error('Error checking can teach:', error);
-          this.isChecking = false;
+          console.log('Error status:', error.status);
+          console.log('Error message:', error.message);
+          console.log('Error error:', error.error);
+          console.log('Full error:', error);
+          this.loadingCheck = false;
+          this.cdr.detectChanges();
         }
       });
     }
   }
 
   loadAverageAge() {
+    this.averageAge = null;
     this.isLoadingAge = true;
     this.analyticsService.getAverageAge().subscribe({
       next: (age) => {
         this.averageAge = age;
         this.isLoadingAge = false;
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error loading average age:', error);
         this.isLoadingAge = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
   loadFemalePercentage() {
     if (this.femaleForm.valid) {
+      this.femalePercentage = null;
       this.isLoadingFemale = true;
       const { klasse } = this.femaleForm.value;
       this.analyticsService.getFemalePercentage(klasse).subscribe({
         next: (percentage) => {
           this.femalePercentage = percentage;
           this.isLoadingFemale = false;
+          this.cdr.detectChanges();
         },
         error: (error) => {
           console.error('Error loading female percentage:', error);
           this.isLoadingFemale = false;
+          this.cdr.detectChanges();
         }
       });
     }
