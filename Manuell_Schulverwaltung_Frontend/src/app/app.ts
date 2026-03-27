@@ -1,12 +1,18 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component } from '@angular/core';
+import { AddStudentComponent } from './components/add-student/add-student';
+import { StudentListComponent } from './components/student-list/student-list';
+import { AddRoomComponent } from './components/add-room/add-room';
+
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  standalone: true,
+  imports: [
+    AddStudentComponent,
+    StudentListComponent,
+    AddRoomComponent
+  ],  
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
-  protected readonly title = signal('Manuell_Schulverwaltung_Frontend');
-}
+export class App {}

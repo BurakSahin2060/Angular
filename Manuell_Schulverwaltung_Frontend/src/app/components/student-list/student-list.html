@@ -1,0 +1,9 @@
+<h2>Alle Schüler</h2>
+
+<button (click)="loadStudents()">Neu laden</button>
+
+<ul>
+  <li *ngFor="let s of students">
+    {{ s.name }} - {{ s.klasse }} - {{ s.geschlecht }}
+  </li>
+</ul>
