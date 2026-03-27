@@ -33,4 +33,8 @@ export class ApiService {
   getFemalePercentage(klasse: string) {
     return this.http.get(`${this.baseUrl}/schule/analytics/frauenanteil/${klasse}`);
   }
+
+getRooms() {
+  return this.http.get(`${this.baseUrl}/klassenraum/all`);
+}
 }
