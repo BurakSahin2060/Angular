@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { AddStudentComponent } from './components/add-student/add-student';
 import { StudentListComponent } from './components/student-list/student-list';
 import { AddRoomComponent } from './components/add-room/add-room';
+import { AnalyticsComponent } from './components/analytics/analytics';
 
 
 @Component({
@@ -10,8 +11,9 @@ import { AddRoomComponent } from './components/add-room/add-room';
   imports: [
     AddStudentComponent,
     StudentListComponent,
-    AddRoomComponent
-  ],  
+    AddRoomComponent,
+    AnalyticsComponent
+  ],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
