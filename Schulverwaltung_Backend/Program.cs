@@ -6,18 +6,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Set specific port for the application
 builder.WebHost.UseUrls("http://localhost:5287");
 
-// CORS für lokale Anfragen aktivieren
+// CORS fï¿½r lokale Anfragen aktivieren
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowLocalhost", policy =>
+    options.AddPolicy("AllowAngular", policy =>
     {
-        policy.WithOrigins("http://localhost:5287") // Allow the same origin
+        policy.WithOrigins("http://localhost:4200")
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
 });
 
-// Services hinzufügen
+// Services hinzufï¿½gen
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -27,7 +27,7 @@ builder.Services.AddDbContext<DBContext>(options =>
 var app = builder.Build();
 
 // CORS aktivieren
-app.UseCors("AllowLocalhost");
+app.UseCors("AllowAngular");
 
 // Static files aktivieren
 app.UseStaticFiles();
@@ -37,7 +37,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-   
+
 }
 
 // Middleware-Konfiguration
