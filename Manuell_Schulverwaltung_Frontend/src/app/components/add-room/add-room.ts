@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
-import { ApiService } from '../../services/api.service';
+import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-add-room',
   standalone: true,
   imports: [FormsModule],
-  templateUrl: './add-room.html'
+  templateUrl: './add-room.html',
+  styleUrls: ['./add-room.css']
 })
 export class AddRoomComponent {
 
@@ -17,12 +18,24 @@ export class AddRoomComponent {
     hasCynap: false
   };
 
-  constructor(private api: ApiService) {}
+  constructor(private http: HttpClient) {}
 
-  addRoom() {
-    this.api.addRoom(this.room).subscribe({
-      next: () => alert('Raum hinzugefügt'),
-      error: (err) => console.error(err)
+addRoom() {
+  this.http.post('http://localhost:5287/api/klassenraum/add', this.room)
+    .subscribe({
+      next: () => {
+        console.log('OK');
+
+        this.room = {
+          name: '',
+          raumInQm: 0,
+          plaetze: 0,
+          hasCynap: false
+        };
+
+        window.location.reload(); // gleiches Prinzip
+      },
+      error: (err: any) => console.error(err)
     });
-  }
+}
 }

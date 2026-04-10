@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ApiService } from '../../services/api.service';
+import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -18,12 +18,24 @@ export class AddStudentComponent {
     klasse: ''
   };
 
-  constructor(private api: ApiService) {}
+  constructor(private http: HttpClient) {}
 
-  addStudent() {
-    this.api.addStudent(this.student).subscribe({
-      next: () => alert('Schüler hinzugefügt'),
-      error: (err) => console.error(err)
+addStudent() {
+  this.http.post('http://localhost:5287/api/schueler/add', this.student)
+    .subscribe({
+      next: () => {
+        console.log('OK');
+
+        this.student = {
+          name: '',
+          geburtstag: '',
+          geschlecht: '',
+          klasse: ''
+        };
+
+        window.location.reload();
+      },
+      error: (err: any) => console.error(err)
     });
-  }
+}
 }

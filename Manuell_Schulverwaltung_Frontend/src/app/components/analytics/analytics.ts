@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ApiService } from '../../services/api.service';
+import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -7,7 +7,8 @@ import { CommonModule } from '@angular/common';
   selector: 'app-analytics',
   standalone: true,
   imports: [FormsModule, CommonModule],
-  templateUrl: './analytics.html'
+  templateUrl: './analytics.html',
+  styleUrls: ['./analytics.css']
 })
 export class AnalyticsComponent {
 
@@ -15,19 +16,21 @@ export class AnalyticsComponent {
   frauenAnteil: number = 0;
   klasse: string = '';
 
-  constructor(private api: ApiService) {}
+  constructor(private http: HttpClient) {}
 
-  loadAverageAge() {
-    this.api.getAverageAge().subscribe({
-      next: (res: any) => this.averageAge = res,
+loadAverageAge() {
+  this.http.get<number>('http://localhost:5287/api/schule/analytics/durchschnittsalter')
+    .subscribe({
+      next: (data) => this.averageAge = data,
       error: (err) => console.error(err)
     });
-  }
+}
 
-  loadFrauenAnteil() {
-    this.api.getFemalePercentage(this.klasse).subscribe({
-      next: (res: any) => this.frauenAnteil = res,
+loadFrauenAnteil() {
+  this.http.get<number>(`http://localhost:5287/api/schule/analytics/frauenanteil/${this.klasse}`)
+    .subscribe({
+      next: (data) => this.frauenAnteil = data,
       error: (err) => console.error(err)
     });
-  }
+}
 }
