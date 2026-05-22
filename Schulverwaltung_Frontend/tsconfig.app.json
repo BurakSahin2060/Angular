@@ -4,6 +4,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
+    "rootDir": "./src", // This is required to prevent TypeScript from including files from outside the src folder, which can cause issues with Angular's module resolution.
     "types": []
   },
   "include": [

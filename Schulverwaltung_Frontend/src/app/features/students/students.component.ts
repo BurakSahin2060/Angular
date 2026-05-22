@@ -19,15 +19,15 @@ import { Student } from '../../models/models';
         <form [formGroup]="studentForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700">Name</label>
-            <input type="text" formControlName="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            <input type="text" formControlName="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700">Geburtstag</label>
-            <input type="date" formControlName="geburtstag" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            <input type="date" formControlName="geburtstag" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700">Geschlecht</label>
-            <select formControlName="geschlecht" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            <select formControlName="geschlecht" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
               <option value="">Select</option>
               <option value="männlich">Männlich</option>
               <option value="weiblich">Weiblich</option>
@@ -35,21 +35,28 @@ import { Student } from '../../models/models';
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700">Klasse</label>
-            <input type="text" formControlName="klasse" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            <input type="text" formControlName="klasse" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
           </div>
           <div class="md:col-span-2">
-            <button type="submit" [disabled]="studentForm.invalid || isLoading" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50">
+            <button type="submit" [disabled]="studentForm.invalid || isLoading"
+              class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50">
               {{ isLoading ? 'Adding...' : 'Add Student' }}
             </button>
           </div>
         </form>
-        <div *ngIf="successMessage" class="mt-4 p-4 bg-green-100 text-green-700 rounded">{{ successMessage }}</div>
-        <div *ngIf="errorMessage" class="mt-4 p-4 bg-red-100 text-red-700 rounded">{{ errorMessage }}</div>
+
+        <div *ngIf="successMessage" class="mt-4 p-4 bg-green-100 text-green-700 rounded">
+          {{ successMessage }}
+        </div>
+        <div *ngIf="errorMessage" class="mt-4 p-4 bg-red-100 text-red-700 rounded">
+          {{ errorMessage }}
+        </div>
       </div>
 
       <!-- Filter -->
       <div class="mb-4">
-        <input type="text" [(ngModel)]="filterClass" placeholder="Filter by class" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        <input type="text" [(ngModel)]="filterClass" placeholder="Filter by class"
+          class="rounded-md border-gray-300 shadow-sm">
       </div>
 
       <!-- Students Table -->
@@ -66,11 +73,11 @@ import { Student } from '../../models/models';
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr *ngFor="let student of filteredStudents" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap">{{ student.name }}</td>
-              <td class="px-6 py-4 whitespace-nowrap">{{ student.klasse }}</td>
-              <td class="px-6 py-4 whitespace-nowrap">{{ student.geschlecht }}</td>
-              <td class="px-6 py-4 whitespace-nowrap">{{ student.geburtstag }}</td>
-              <td class="px-6 py-4 whitespace-nowrap">{{ student.alter }}</td>
+              <td class="px-6 py-4">{{ student.name }}</td>
+              <td class="px-6 py-4">{{ student.klasse }}</td>
+              <td class="px-6 py-4">{{ student.geschlecht }}</td>
+              <td class="px-6 py-4">{{ student.geburtstag }}</td>
+              <td class="px-6 py-4">{{ student.alter }}</td>
             </tr>
           </tbody>
         </table>
@@ -99,9 +106,11 @@ export class StudentsComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
-    this.loadStudents();
-  }
+ngOnInit() {
+  setTimeout(() => {
+    this.loadStudents()
+  });
+}
 
   loadStudents() {
     this.studentService.getAllStudents().subscribe({
@@ -115,6 +124,7 @@ export class StudentsComponent implements OnInit {
       this.isLoading = true;
       this.successMessage = '';
       this.errorMessage = '';
+
       this.studentService.addStudent(this.studentForm.value).subscribe({
         next: () => {
           this.successMessage = 'Student added successfully!';
@@ -133,6 +143,8 @@ export class StudentsComponent implements OnInit {
 
   get filteredStudents() {
     if (!this.filterClass) return this.students;
-    return this.students.filter(s => s.klasse.toLowerCase().includes(this.filterClass.toLowerCase()));
+    return this.students.filter(s =>
+      s.klasse.toLowerCase().includes(this.filterClass.toLowerCase())
+    );
   }
 }
