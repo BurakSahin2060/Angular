@@ -35,5 +35,12 @@ namespace Schulwebapplikation.Controllers
                 return StatusCode(500, $"Fehler beim Hinzufügen: {ex.InnerException?.Message ?? ex.Message}");
             }
         }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllKlassenraeume()
+        {
+            var raeume = await _context.Klassenraeume.ToListAsync();
+            return Ok(raeume);
+        }
     }
 }

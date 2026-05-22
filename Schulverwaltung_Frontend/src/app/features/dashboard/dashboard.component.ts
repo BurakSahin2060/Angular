@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter, Subscription } from 'rxjs';
 import { StudentService } from '../../services/student.service';
 import { AnalyticsService } from '../../services/analytics.service';
 import { Student } from '../../models/models';
@@ -32,18 +34,26 @@ import { Student } from '../../models/models';
   `,
   styles: []
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   totalStudents = 0;
   averageAge = 0;
   uniqueClasses: string[] = [];
+  private navigationSubscription?: Subscription;
 
   constructor(
     private studentService: StudentService,
-    private analyticsService: AnalyticsService
+    private analyticsService: AnalyticsService,
+    private router: Router
   ) {}
 
-  ngOnInit() {
-    this.loadData();
+ngOnInit() {
+  setTimeout(() => {
+    this.loadData(); // oder loadStudents()
+  });
+}
+
+  ngOnDestroy() {
+    this.navigationSubscription?.unsubscribe();
   }
 
   loadData() {

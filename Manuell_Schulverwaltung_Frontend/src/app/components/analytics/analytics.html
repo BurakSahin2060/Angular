@@ -1,0 +1,16 @@
+<h2>Statistiken</h2>
+
+<button (click)="loadAverageAge()">Durchschnittsalter laden</button>
+<p *ngIf="averageAge">
+  Durchschnittsalter: {{ averageAge | number:'1.1-2' }} Jahre
+</p>
+
+<hr>
+
+<input [(ngModel)]="klasse" placeholder="Klasse eingeben">
+
+<button (click)="loadFrauenAnteil()">Frauenanteil berechnen</button>
+
+<p *ngIf="frauenAnteil">
+  Frauenanteil: {{ frauenAnteil | number:'1.1-2' }} %
+</p>

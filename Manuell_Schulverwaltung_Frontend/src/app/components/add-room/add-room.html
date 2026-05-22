@@ -1,0 +1,19 @@
+<h2>Klassenraum hinzufügen</h2>
+
+<input [(ngModel)]="room.name" placeholder="Name">
+<br><br>
+
+<input [(ngModel)]="room.raumInQm" type="number" placeholder="Größe (qm)">
+<br><br>
+
+<input [(ngModel)]="room.plaetze" type="number" placeholder="Plätze">
+<br><br>
+
+<label>
+  <input type="checkbox" [(ngModel)]="room.hasCynap">
+  Cynap vorhanden
+</label>
+
+<br><br>
+
+<button (click)="addRoom()">Speichern</button>

@@ -1,0 +1,10 @@
+<h2>Klassenräume</h2>
+
+<button (click)="loadRooms()">Neu laden</button>
+
+<ul>
+  <li *ngFor="let r of rooms">
+    {{ r.name }} - {{ r.plaetze }} Plätze - {{ r.raumInQm }} qm
+    <span *ngIf="r.hasCynap"> (Cynap)</span>
+  </li>
+</ul>

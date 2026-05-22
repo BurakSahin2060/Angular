@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Set specific port for the application
 builder.WebHost.UseUrls("http://localhost:5287");
 
-// CORS f�r lokale Anfragen aktivieren
+// CORS für lokale Anfragen aktivieren
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
