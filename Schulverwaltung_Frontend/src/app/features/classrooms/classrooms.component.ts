@@ -1,57 +1,128 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
 import { ClassroomService } from '../../services/classroom.service';
+import { NotificationService } from '../../services/notification.service';
+import { Classroom } from '../../models/models';
 
 @Component({
   selector: 'app-classrooms',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="p-6">
-      <h1 class="text-3xl font-bold mb-6">Classrooms</h1>
+    <div class="max-w-7xl mx-auto space-y-6">
+      <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 class="text-3xl font-bold text-slate-900">Classrooms</h1>
+            <p class="text-sm text-slate-500 mt-1">Manage classrooms and keep track of available capacity.</p>
+          </div>
+          <div class="text-sm text-slate-500">Automatically refreshed after each update.</div>
+        </div>
+      </section>
 
-      <div class="bg-white rounded-xl shadow-md p-6 max-w-md">
-        <h2 class="text-xl font-semibold mb-4">Add New Classroom</h2>
-        <form [formGroup]="classroomForm" (ngSubmit)="onSubmit()">
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Name</label>
-            <input type="text" formControlName="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+      <section class="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+        <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 class="text-xl font-semibold text-slate-900 mb-4">Add New Classroom</h2>
+          <form [formGroup]="classroomForm" (ngSubmit)="onSubmit()" class="grid gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700">Room name</label>
+              <input type="text" formControlName="name" placeholder="Enter room name" class="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+              <div *ngIf="classroomForm.controls['name'].invalid && classroomForm.controls['name'].touched" class="mt-2 text-xs text-rose-600">Room name is required.</div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700">Size (sqm)</label>
+              <input type="number" formControlName="raumInQm" placeholder="Enter size in sqm" class="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+              <div *ngIf="classroomForm.controls['raumInQm'].invalid && classroomForm.controls['raumInQm'].touched" class="mt-2 text-xs text-rose-600">Enter a valid room size.</div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700">Seats</label>
+              <input type="number" formControlName="plaetze" placeholder="Enter number of seats" class="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+              <div *ngIf="classroomForm.controls['plaetze'].invalid && classroomForm.controls['plaetze'].touched" class="mt-2 text-xs text-rose-600">Enter a valid seat count.</div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <label class="inline-flex items-center gap-3 text-sm text-slate-700">
+                <input type="checkbox" formControlName="hasCynap" class="h-5 w-5 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                Cynap available
+              </label>
+            </div>
+
+            <button type="submit" [disabled]="classroomForm.invalid || isAdding" class="w-full rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:opacity-60">
+              {{ isAdding ? 'Adding...' : 'Add Classroom' }}
+            </button>
+          </form>
+
+          <div *ngIf="successMessage" class="mt-4 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-sm text-emerald-700">
+            {{ successMessage }}
           </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Raum in qm</label>
-            <input type="number" formControlName="raumInQm" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          <div *ngIf="submitErrorMessage" class="mt-4 rounded-2xl bg-rose-50 border border-rose-200 p-4 text-sm text-rose-700">
+            {{ submitErrorMessage }}
           </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Plätze</label>
-            <input type="number" formControlName="plaetze" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        </article>
+
+        <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 class="text-xl font-semibold text-slate-900">Available Classrooms</h2>
+              <p class="text-sm text-slate-500">Quickly see which rooms are available.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-slate-600">{{ rooms.length }} rooms</span>
+              <span *ngIf="isLoadingRooms" class="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">Loading…</span>
+            </div>
           </div>
-          <div class="mb-4">
-            <label class="flex items-center">
-              <input type="checkbox" formControlName="hasCynap" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200">
-              <span class="ml-2 text-sm text-gray-700">Has Cynap</span>
-            </label>
+
+          <div *ngIf="loadErrorMessage" class="mt-6 rounded-2xl bg-rose-50 border border-rose-200 p-4 text-sm text-rose-700">
+            {{ loadErrorMessage }}
           </div>
-          <button type="submit" [disabled]="classroomForm.invalid || isLoading" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50">
-            {{ isLoading ? 'Adding...' : 'Add Classroom' }}
-          </button>
-        </form>
-        <div *ngIf="successMessage" class="mt-4 p-4 bg-green-100 text-green-700 rounded">{{ successMessage }}</div>
-        <div *ngIf="errorMessage" class="mt-4 p-4 bg-red-100 text-red-700 rounded">{{ errorMessage }}</div>
-      </div>
+
+          <div *ngIf="!isLoadingRooms && rooms.length === 0" class="mt-6 rounded-2xl bg-slate-50 p-6 text-slate-600">
+            No classrooms found.
+          </div>
+
+          <div *ngIf="rooms.length > 0" class="mt-6 overflow-x-auto rounded-3xl border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+              <thead class="bg-slate-50 text-slate-600 uppercase tracking-wider">
+                <tr>
+                  <th class="px-6 py-4">Room name</th>
+                  <th class="px-6 py-4">Size (sqm)</th>
+                  <th class="px-6 py-4">Seats</th>
+                  <th class="px-6 py-4">Cynap</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 bg-white">
+                <tr *ngFor="let room of rooms" class="hover:bg-slate-50">
+                  <td class="px-6 py-4">{{ room.name }}</td>
+                  <td class="px-6 py-4">{{ room.raumInQm }}</td>
+                  <td class="px-6 py-4">{{ room.plaetze }}</td>
+                  <td class="px-6 py-4">{{ room.hasCynap ? 'Yes' : 'No' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
     </div>
   `,
   styles: []
 })
-export class ClassroomsComponent {
+export class ClassroomsComponent implements OnInit {
   classroomForm: FormGroup;
-  isLoading = false;
+  rooms: Classroom[] = [];
+  isLoadingRooms = false;
+  isAdding = false;
   successMessage = '';
-  errorMessage = '';
+  submitErrorMessage = '';
+  loadErrorMessage = '';
 
   constructor(
     private fb: FormBuilder,
-    private classroomService: ClassroomService
+    private classroomService: ClassroomService,
+    private notificationService: NotificationService
   ) {
     this.classroomForm = this.fb.group({
       name: ['', Validators.required],
@@ -61,24 +132,62 @@ export class ClassroomsComponent {
     });
   }
 
-  onSubmit() {
-    if (this.classroomForm.valid) {
-      this.isLoading = true;
-      this.successMessage = '';
-      this.errorMessage = '';
+  ngOnInit(): void {
+    this.loadRooms();
+  }
 
-      this.classroomService.addClassroom(this.classroomForm.value).subscribe({
-        next: () => {
-          this.successMessage = 'Classroom added successfully!';
-          this.classroomForm.reset();
-          this.isLoading = false;
+  loadRooms(): void {
+    this.isLoadingRooms = true;
+    this.loadErrorMessage = '';
+
+    this.classroomService.getAllClassrooms()
+      .pipe(finalize(() => (this.isLoadingRooms = false)))
+      .subscribe({
+        next: (rooms) => {
+          this.rooms = rooms;
         },
         error: (error) => {
-          this.errorMessage = 'Error adding classroom.';
-          this.isLoading = false;
-          console.error('Error:', error);
+          const message = this.notificationService.formatError(error, 'Unable to load classrooms.');
+          console.error('Error loading classrooms:', error);
+          this.loadErrorMessage = message;
+          this.notificationService.showError(message);
         }
       });
+  }
+
+  onSubmit(): void {
+    if (!this.classroomForm.valid) {
+      this.classroomForm.markAllAsTouched();
+      return;
     }
+
+    this.isAdding = true;
+    this.successMessage = '';
+    this.submitErrorMessage = '';
+
+    const payload = this.classroomForm.value;
+
+    this.classroomService.addClassroom(payload)
+      .pipe(finalize(() => (this.isAdding = false)))
+      .subscribe({
+        next: () => {
+          const message = 'Classroom added successfully.';
+          this.successMessage = message;
+          this.notificationService.showSuccess(message);
+          this.classroomForm.reset({
+            name: '',
+            raumInQm: 0,
+            plaetze: 0,
+            hasCynap: false
+          });
+          this.loadRooms();
+        },
+        error: (error) => {
+          const message = this.notificationService.formatError(error, 'Unable to add classroom. Please check the form and try again.');
+          console.error('Error adding classroom:', error);
+          this.submitErrorMessage = message;
+          this.notificationService.showError(message);
+        }
+      });
   }
 }

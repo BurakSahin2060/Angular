@@ -12,7 +12,11 @@ export class ClassroomService {
 
   constructor(private http: HttpClient) {}
 
-  addClassroom(classroom: Omit<Classroom, 'id'>): Observable<Classroom> {
-    return this.http.post<Classroom>(`${this.apiUrl}/add`, classroom);
+  getAllClassrooms(): Observable<Classroom[]> {
+    return this.http.get<Classroom[]>(`${this.apiUrl}/all`);
+  }
+
+  addClassroom(classroom: Omit<Classroom, 'id'>): Observable<string> {
+    return this.http.post<string>(`${this.apiUrl}/add`, classroom);
   }
 }
