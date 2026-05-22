@@ -20,7 +20,7 @@ export class StudentService {
     return this.http.get<Student[]>(`${this.apiUrl}/byKlasse/${klasse}`);
   }
 
-  addStudent(student: Omit<Student, 'id' | 'alter'>): Observable<Student> {
-    return this.http.post<Student>(`${this.apiUrl}/add`, student);
+  addStudent(student: Omit<Student, 'id' | 'alter'>): Observable<string> {
+    return this.http.post<string>(`${this.apiUrl}/add`, student);
   }
 }

@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, NavigationEnd } from '@angular/router';
-import { filter, Subscription } from 'rxjs';
+import { forkJoin } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { StudentService } from '../../services/student.service';
 import { AnalyticsService } from '../../services/analytics.service';
+import { NotificationService } from '../../services/notification.service';
 import { Student } from '../../models/models';
 
 @Component({
@@ -11,63 +12,84 @@ import { Student } from '../../models/models';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="p-6">
-      <h1 class="text-3xl font-bold mb-6">Dashboard</h1>
+    <div class="max-w-7xl mx-auto">
+      <section class="mb-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 class="text-3xl font-bold text-slate-900">Dashboard</h1>
+            <p class="text-sm text-slate-500 mt-1">Overview of student counts and school metrics.</p>
+          </div>
+          <div class="text-sm text-slate-500">
+            <span *ngIf="isLoading">Refreshing data...</span>
+            <span *ngIf="!isLoading">Last updated: {{ lastUpdated | date:'short' }}</span>
+          </div>
+        </div>
+      </section>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="bg-white rounded-xl shadow-md p-6">
-          <h3 class="text-lg font-semibold text-gray-700">Total Students</h3>
-          <p class="text-3xl font-bold text-blue-600">{{ totalStudents }}</p>
+      <div *ngIf="errorMessage" class="mb-6 rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+        {{ errorMessage }}
+      </div>
+
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="text-sm font-semibold uppercase tracking-wide text-slate-500">Total Students</div>
+          <div class="mt-4 text-4xl font-bold text-sky-600">{{ totalStudents }}</div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-md p-6">
-          <h3 class="text-lg font-semibold text-gray-700">Average Age</h3>
-          <p class="text-3xl font-bold text-green-600">{{ averageAge | number:'1.1-1' }}</p>
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="text-sm font-semibold uppercase tracking-wide text-slate-500">Average Age</div>
+          <div class="mt-4 text-4xl font-bold text-emerald-600">{{ averageAge | number:'1.1-1' }}</div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-md p-6">
-          <h3 class="text-lg font-semibold text-gray-700">Classes</h3>
-          <p class="text-3xl font-bold text-purple-600">{{ uniqueClasses.length }}</p>
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="text-sm font-semibold uppercase tracking-wide text-slate-500">Classes</div>
+          <div class="mt-4 text-4xl font-bold text-violet-600">{{ uniqueClasses.length }}</div>
         </div>
       </div>
     </div>
   `,
   styles: []
 })
-export class DashboardComponent implements OnInit, OnDestroy {
+export class DashboardComponent implements OnInit {
   totalStudents = 0;
   averageAge = 0;
   uniqueClasses: string[] = [];
-  private navigationSubscription?: Subscription;
+  isLoading = false;
+  errorMessage = '';
+  lastUpdated: Date = new Date();
 
   constructor(
     private studentService: StudentService,
     private analyticsService: AnalyticsService,
-    private router: Router
+    private notificationService: NotificationService
   ) {}
 
-ngOnInit() {
-  setTimeout(() => {
-    this.loadData(); // oder loadStudents()
-  });
-}
-
-  ngOnDestroy() {
-    this.navigationSubscription?.unsubscribe();
+  ngOnInit(): void {
+    this.loadData();
   }
 
-  loadData() {
-    this.studentService.getAllStudents().subscribe({
-      next: (students) => {
-        this.totalStudents = students.length;
-        this.uniqueClasses = [...new Set(students.map(s => s.klasse))];
-      },
-      error: (error) => console.error('Error loading students:', error)
-    });
+  loadData(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
 
-    this.analyticsService.getAverageAge().subscribe({
-      next: (age) => this.averageAge = age,
-      error: (error) => console.error('Error loading average age:', error)
-    });
+    forkJoin({
+      students: this.studentService.getAllStudents(),
+      averageAge: this.analyticsService.getAverageAge()
+    })
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: ({ students, averageAge }) => {
+          this.totalStudents = students.length;
+          this.uniqueClasses = [...new Set(students.map((s: Student) => s.klasse))];
+          this.averageAge = averageAge;
+          this.lastUpdated = new Date();
+        },
+        error: (error) => {
+          const message = this.notificationService.formatError(error, 'Unable to load dashboard data.');
+          console.error('Error loading dashboard data:', error);
+          this.errorMessage = message;
+          this.notificationService.showError(message);
+        }
+      });
   }
 }

@@ -33,7 +33,7 @@ addRoom() {
           hasCynap: false
         };
 
-        window.location.reload(); // gleiches Prinzip
+        window.location.reload();
       },
       error: (err: any) => console.error(err)
     });
